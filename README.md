@@ -12,12 +12,12 @@ A production-ready **Graph RAG (Retrieval-Augmented Generation)** chat applicati
 
 ### 🔗 **Graph RAG Architecture**
 - **GraphDB integration** with Ontotext GraphDB
-- **LLM-driven SPARQL generation** based on comprehensive ontology
+- **LLM-driven SPARQL generation** based on ontology
 - **Hybrid intelligence** combining structured knowledge graphs with LLM reasoning
-- **Real-time data retrieval** from triple stores
+- **Real-time data retrieval** from triple store
 
-### 📊 **Rich Jaguar Conservation Database**
-- Comprehensive **jaguar ontology** with 300+ classes and properties
+### 📊 **Jaguar Conservation Database**
+- **jaguar ontology** with some classes and properties for demo purpouses
 - Individual jaguar tracking (gender, identification marks, monitoring dates)
 - Conservation efforts and organizations
 - Threats, habitats, and locations
