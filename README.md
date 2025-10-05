@@ -1,6 +1,6 @@
 # 🐆 Graph RAG Chat Application
 
-A production-ready **Graph RAG (Retrieval-Augmented Generation)** chat application that combines the power of **Azure OpenAI GPT** with **knowledge graphs** stored in **Ontotext GraphDB**. This application demonstrates how to build an intelligent assistant that can query structured data using SPARQL and provide natural language responses.
+A **Graph RAG (Retrieval-Augmented Generation)** chat application for demo purpouses that combines the power of **Azure OpenAI GPT** with **knowledge graphs** stored in **Ontotext GraphDB**. This application demonstrates how to build an intelligent assistant that can query structured data using SPARQL and provide natural language responses. This is more or less a draft verion that certainly can be upgraded in several different aspects
 
 ## 🌟 Features
 
