@@ -1,4 +1,11 @@
+# Python 3.10+ Required
+
+# Microsoft Agent Framework (Preview)
+agent-framework>=1.0.0b251007
+
+# Core Dependencies
 flask==3.0.0
-pydantic==2.5.0
-openai==1.51.0
-python-dotenv==1.0.0
+python-dotenv>=1.0.0
+requests==2.31.0
+
+# Note: pydantic and openai versions managed by agent-framework

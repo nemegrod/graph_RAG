@@ -1,25 +1,32 @@
-#!/usr/bin/env python3
-
-import requests
-from urllib.parse import urlencode
+"""GraphDB SPARQL query tool for Agent Framework"""
 import json
-from typing import List, Dict, Any, Optional
+from typing import Dict, Any, Optional
+from src.services.graphdb_service import get_graphdb_service
+
 
 class GraphDBTool:
     """
-    Tool for querying GraphDB with SPARQL queries about jaguars
+    Tool for querying GraphDB with SPARQL queries about jaguars.
+    Designed to work with Agent Framework's function calling.
     """
     
-    def __init__(self, graphdb_url: str = "http://localhost:7200", repository: str = "Jaguars"):
-        self.graphdb_url = graphdb_url
-        self.repository = repository
-        self.sparql_endpoint = f"{graphdb_url}/repositories/{repository}"
+    def __init__(self, graphdb_service=None):
+        """
+        Initialize GraphDB tool
+        
+        Args:
+            graphdb_service: Optional GraphDB service instance
+        """
+        self.graphdb_service = graphdb_service or get_graphdb_service()
     
     @staticmethod
-    def get_tool_definition():
+    def get_tool_definition() -> Dict[str, Any]:
         """
-        Returns the LLM function calling tool definition for querying the jaguar database.
+        Returns the function calling tool definition for querying the jaguar database.
         This includes the complete ontology schema and SPARQL examples.
+        
+        Returns:
+            Tool definition dictionary compatible with OpenAI function calling
         """
         return {
             "type": "function",
@@ -335,45 +342,45 @@ class GraphDBTool:
                 }
             }
         }
-   
     
-    def execute_sparql_json(self, sparql_query: str) -> str:
+    def execute_query(self, sparql_query: str) -> Dict[str, Any]:
         """
         Execute a SPARQL query against GraphDB
+        
+        Args:
+            sparql_query: SPARQL query string
+        
+        Returns:
+            Query results as dictionary
         """
         try:
-            params = {'query': sparql_query.strip()}
-            headers = {
-                'Accept': 'application/sparql-results+json',
-                'Content-Type': 'application/x-www-form-urlencoded'
-            }
-            
-            response = requests.post(
-                self.sparql_endpoint,
-                data=urlencode(params),
-                headers=headers,
-                timeout=30
-            )
-            
-            response.raise_for_status()
-            result_data = response.json()
-            print(sparql_query)
-            return result_data
-            
-        except requests.exceptions.ConnectionError:
-            return f"Could not connect to GraphDB at {self.graphdb_url} query: {sparql_query}"
-        except requests.exceptions.HTTPError as e:
-            return f"HTTP Error: {e} query: {sparql_query}"
+            result = self.graphdb_service.execute_sparql_query(sparql_query)
+            return result
         except Exception as e:
-            return f"Unexpected error: {e}, query: {sparql_query}"
+            return {"error": str(e), "query": sparql_query}
+    
+    def execute_query_json(self, sparql_query: str) -> str:
+        """
+        Execute a SPARQL query and return JSON string
+        
+        Args:
+            sparql_query: SPARQL query string
+        
+        Returns:
+            Query results as JSON string
+        """
+        result = self.execute_query(sparql_query)
+        return json.dumps(result, indent=2)
 
-if __name__ == "__main__":
-    tool = GraphDBTool()
-    test_sparql = """PREFIX : <http://example.org/ontology#>
-SELECT ?jaguar
-WHERE {
-  ?jaguar a :Jaguar .
-}"""
-    result = tool.execute_sparql_json(test_sparql)
-    print("Test result:")
-    print(result)
+
+# Global tool instance
+_graphdb_tool: Optional[GraphDBTool] = None
+
+
+def get_graphdb_tool() -> GraphDBTool:
+    """Get or create global GraphDB tool instance"""
+    global _graphdb_tool
+    if _graphdb_tool is None:
+        _graphdb_tool = GraphDBTool()
+    return _graphdb_tool
+
