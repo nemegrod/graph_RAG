@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, session
+from flask import Flask, render_template, request, jsonify, session, g
 import uuid
 import asyncio
 from src.agents.jaguar_agent.jaguar_agent_af import get_jaguar_agent
@@ -6,11 +6,15 @@ from src.agents.jaguar_agent.jaguar_agent_af import get_jaguar_agent
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-change-this-in-production'  # Change this in production
 
-# Initialize Agent Framework agent
-agent = None  # Will be initialized lazily
-
 # Store thread IDs per session (Agent Framework manages conversation history internally)
-session_threads = {}
+app.config['SESSION_THREADS'] = {}
+
+
+def get_agent():
+    """Get or create the jaguar agent (singleton pattern using Flask app context)"""
+    if 'agent' not in app.config:
+        app.config['agent'] = get_jaguar_agent()
+    return app.config['agent']
 
 @app.route('/')
 def index():
@@ -20,12 +24,9 @@ def index():
 @app.route('/chat', methods=['POST'])
 def chat():
     """Handle chat messages"""
-    global agent
-    
     try:
-        # Lazy initialization of agent
-        if agent is None:
-            agent = get_jaguar_agent()
+        # Get the agent instance
+        agent = get_agent()
         
         data = request.get_json()
         user_message = data.get('message', '').strip()
@@ -39,12 +40,24 @@ def chat():
             session_id = str(uuid.uuid4())
             session['session_id'] = session_id
             # Each session gets a unique thread ID for Agent Framework
-            session_threads[session_id] = f"thread_{session_id}"
+            app.config['SESSION_THREADS'][session_id] = f"thread_{session_id}"
         
-        thread_id = session_threads.get(session_id, f"thread_{session_id}")
+        thread_id = app.config['SESSION_THREADS'].get(session_id, f"thread_{session_id}")
         
         # Run agent asynchronously - Agent Framework manages history per thread
-        assistant_response = asyncio.run(agent.run(user_message, thread_id=thread_id))
+        response = asyncio.run(agent.run(user_message, thread_id=thread_id))
+        
+        # Extract the text content from the AgentRunResponse object
+        last_message = response.messages[-1] if response.messages else None
+        if last_message:
+            # Try different possible attributes
+            assistant_response = (
+                getattr(last_message, 'text', None) or
+                getattr(last_message, 'content', None) or
+                str(last_message)
+            )
+        else:
+            assistant_response = ""
         
         return jsonify({
             'user_message': user_message,
@@ -64,7 +77,7 @@ def clear_chat():
             # Create a new thread ID to start fresh conversation
             # Agent Framework maintains history per thread, so new thread = fresh start
             new_thread_id = f"thread_{uuid.uuid4()}"
-            session_threads[session_id] = new_thread_id
+            app.config['SESSION_THREADS'][session_id] = new_thread_id
             return jsonify({'success': True, 'message': 'Chat history cleared'})
         
         return jsonify({'success': True, 'message': 'No active session'})
@@ -77,7 +90,7 @@ def get_history():
     """Get chat history for current session"""
     try:
         session_id = session.get('session_id')
-        thread_id = session_threads.get(session_id) if session_id else None
+        thread_id = app.config['SESSION_THREADS'].get(session_id) if session_id else None
         
         if thread_id:
             # Agent Framework manages history internally per thread

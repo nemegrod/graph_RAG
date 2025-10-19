@@ -3,7 +3,7 @@ import asyncio
 import os
 import json
 from dotenv import load_dotenv
-from agent_framework.azure import AzureOpenAIResponsesClient, AzureOpenAISettings
+from agent_framework.openai import OpenAIResponsesClient, OpenAISettings
 from src.services.graphdb_service import get_graphdb_service
 
 # Load environment variables
@@ -355,20 +355,19 @@ When responding:
         # OpenAI settings
     settings = OpenAISettings(
         api_key=os.getenv("OPENAI_API_KEY", ""),
-        model=os.getenv("OPENAI_MODEL", "gpt-4")
+        model_id=os.getenv("OPENAI_RESPONSES_MODEL_ID", "gpt-4")
     )
     
     # Create client
     client = OpenAIResponsesClient(settings=settings)
     
     # Create and return native Agent Framework agent
-    agent = asyncio.run(client.create_agent(
+    agent = client.create_agent(
         name="JaguarConservationAgent",
         instructions=system_prompt,
-        model=os.getenv("OPENAI_MODEL", "gpt-4"),
         tools=[query_jaguar_database],
         tool_choice="auto"
-    ))
+    )
     
     return agent
 
