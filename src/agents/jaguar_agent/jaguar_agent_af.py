@@ -352,22 +352,20 @@ When responding:
 - Be concise but comprehensive in your answers
 - Always mention that the information comes from the jaguar database"""
     
-    # Azure OpenAI settings
-    settings = AzureOpenAISettings(
-        api_key=os.getenv("AZURE_OPENAI_API_KEY", ""),
-        endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", ""),
-        api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-12-01-preview"),
-        deployment_name=os.getenv("AZURE_OPENAI_MODEL_DEPLOYMENT", "")
+        # OpenAI settings
+    settings = OpenAISettings(
+        api_key=os.getenv("OPENAI_API_KEY", ""),
+        model=os.getenv("OPENAI_MODEL", "gpt-4")
     )
     
     # Create client
-    client = AzureOpenAIResponsesClient(settings=settings)
+    client = OpenAIResponsesClient(settings=settings)
     
     # Create and return native Agent Framework agent
     agent = asyncio.run(client.create_agent(
         name="JaguarConservationAgent",
         instructions=system_prompt,
-        model=os.getenv("AZURE_OPENAI_MODEL_DEPLOYMENT", ""),
+        model=os.getenv("OPENAI_MODEL", "gpt-4"),
         tools=[query_jaguar_database],
         tool_choice="auto"
     ))
