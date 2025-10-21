@@ -1,7 +1,14 @@
 from flask import Flask, render_template, request, redirect, url_for
 import asyncio
 import logging
-from src.agents.jaguar_agent.jaguar_agent_af import get_jaguar_agent
+import os
+from dotenv import load_dotenv
+from agent_framework.openai import OpenAIResponsesClient, OpenAISettings
+from agent_framework import ChatAgent
+from src.agents.jaguar_agent import create_jaguar_agent
+
+# Load environment variables
+load_dotenv()
 
 # Suppress Werkzeug request logs
 log = logging.getLogger('werkzeug')
@@ -16,10 +23,12 @@ app.config['CHAT_HISTORY'] = []
 app.config['ERROR'] = None
 
 
+
+
 def get_agent():
     """Get or create the jaguar agent (singleton)"""
     if app.config['AGENT'] is None:
-        app.config['AGENT'] = get_jaguar_agent()
+        app.config['AGENT'] = create_jaguar_agent()
     return app.config['AGENT']
 
 

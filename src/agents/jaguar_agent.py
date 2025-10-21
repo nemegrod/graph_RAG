@@ -1,14 +1,19 @@
-"""Jaguar Conservation Agent - Using Microsoft Agent Framework"""
+"""
+DEPRECATED: Jaguar Conservation Agent - Using Microsoft Agent Framework
+
+This file has been deprecated. The agent code has been moved directly into app.py
+for the single-user POC. This file is kept for reference only.
+
+The agent creation logic is now in app.py as create_jaguar_agent().
+"""
 import os
 from dotenv import load_dotenv
 from agent_framework.openai import OpenAIResponsesClient, OpenAISettings
 from agent_framework import ChatAgent
-from src.tools.query_jaguar_database import query_jaguar_database
+from src.agents.jaguar_tool import query_jaguar_database
 
 # Load environment variables
 load_dotenv()
-
-
 
 
 def create_jaguar_agent():
@@ -58,14 +63,3 @@ When responding:
     
     return agent
 
-
-# Global agent instance (singleton)
-_jaguar_agent = None
-
-
-def get_jaguar_agent():
-    """Get or create the jaguar conservation agent"""
-    global _jaguar_agent
-    if _jaguar_agent is None:
-        _jaguar_agent = create_jaguar_agent()
-    return _jaguar_agent

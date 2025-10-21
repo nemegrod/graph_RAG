@@ -2,247 +2,283 @@
 
 ## Overview
 
-This document describes the architecture of the Graph RAG application after migration to the Microsoft Agent Framework patterns.
+This document describes the architecture of the **Graph RAG (Retrieval-Augmented Generation)** application that combines **OpenAI GPT** with **GraphDB knowledge graphs** for intelligent jaguar conservation queries. The application demonstrates how to build a conversational AI that can query structured data using SPARQL and provide natural language responses.
 
-## High-Level Architecture
+## Graph RAG High-Level Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     Web Layer (Flask)                        │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
-│  │   Routes     │  │  Templates   │  │   Static     │     │
-│  └──────────────┘  └──────────────┘  └──────────────┘     │
-└────────────────────────┬────────────────────────────────────┘
-                         │
-┌────────────────────────▼────────────────────────────────────┐
-│                     Agent Layer                              │
-│  ┌──────────────────────────────────────────────────┐       │
-│  │         Jaguar Conservation Agent                 │       │
-│  │  ┌──────────────┐  ┌──────────────┐            │       │
-│  │  │    Config    │  │  Middleware  │            │       │
-│  │  └──────────────┘  └──────────────┘            │       │
-│  └──────────────────────────────────────────────────┘       │
-└────────────────────────┬────────────────────────────────────┘
-                         │
-┌────────────────────────▼────────────────────────────────────┐
-│                  Context & State Layer                       │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
-│  │Thread Manager│  │Context Prov. │  │ Chat History │     │
-│  └──────────────┘  └──────────────┘  └──────────────┘     │
-└────────────────────────┬────────────────────────────────────┘
-                         │
-┌────────────────────────▼────────────────────────────────────┐
-│                     Tools Layer                              │
-│  ┌──────────────┐  ┌──────────────┐                        │
-│  │ GraphDB Tool │  │Tool Registry │                        │
-│  └──────────────┘  └──────────────┘                        │
-└────────────────────────┬────────────────────────────────────┘
-                         │
-┌────────────────────────▼────────────────────────────────────┐
-│                   Services Layer                             │
-│  ┌──────────────┐  ┌──────────────┐                        │
-│  │  LLM Client  │  │GraphDB Svc.  │                        │
-│  └──────────────┘  └──────────────┘                        │
-└────────────────────────┬────────────────────────────────────┘
-                         │
-┌────────────────────────▼────────────────────────────────────┐
-│                  External Systems                            │
-│  ┌──────────────┐  ┌──────────────┐                        │
-│  │Azure OpenAI  │  │   GraphDB    │                        │
-│  └──────────────┘  └──────────────┘                        │
+│                    Flask Web Application                    │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │              Single-File POC                        │   │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐ │   │
+│  │  │   Routes    │  │ Templates   │  │   Global    │ │   │
+│  │  │  - /chat    │  │  - index.html│  │   State     │ │   │
+│  │  │  - /clear   │  │  - Chat UI  │  │  - AGENT    │ │   │
+│  │  │  - /        │  │  - Error    │  │  - THREAD   │ │   │
+│  │  └─────────────┘  └─────────────┘  │  - HISTORY  │ │   │
+│  │                                    └─────────────┘ │   │
+│  └─────────────────────────────────────────────────────┘   │
+└─────────────────────────┬───────────────────────────────────┘
+                          │
+┌─────────────────────────▼───────────────────────────────────┐
+│                Microsoft Agent Framework                    │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │            Jaguar Conservation Agent                 │   │
+│  │  ┌─────────────────────────────────────────────┐   │   │
+│  │  │            System Prompt                    │   │   │
+│  │  │  - Graph RAG Instructions                   │   │   │
+│  │  │  - SPARQL Guidelines                        │   │   │
+│  │  │  - Response Formatting                      │   │   │
+│  │  └─────────────────────────────────────────────┘   │   │
+│  │                                                   │   │
+│  │  ┌─────────────────────────────────────────────┐   │   │
+│  │  │            OpenAI Client                    │   │   │
+│  │  │  - GPT-4 Integration                       │   │   │
+│  │  │  - Function Calling                        │   │   │
+│  │  │  - Thread Management                       │   │   │
+│  │  └─────────────────────────────────────────────┘   │   │
+│  │                                                   │   │
+│  │  ┌─────────────────────────────────────────────┐   │   │
+│  │  │            GraphDB Tool                     │   │   │
+│  │  │  - SPARQL Query Execution                   │   │   │
+│  │  │  - Query Validation                        │   │   │
+│  │  │  - Result Processing                       │   │   │
+│  │  └─────────────────────────────────────────────┘   │   │
+│  └─────────────────────────────────────────────────────┘   │
+└─────────────────────────┬───────────────────────────────────┘
+                          │
+┌─────────────────────────▼───────────────────────────────────┐
+│                    External Systems                         │
+│  ┌─────────────────┐              ┌─────────────────────┐   │
+│  │   OpenAI API    │              │      GraphDB        │   │
+│  │  - GPT-4        │              │  - RDF Triple Store │   │
+│  │  - Responses    │              │  - SPARQL Engine    │   │
+│  │  - Function     │              │  - Jaguar Ontology  │   │
+│  │    Calling      │              │  - Conservation     │   │
+│  └─────────────────┘              │    Data             │   │
+│                                   └─────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Component Descriptions
+## Graph RAG Component Descriptions
 
-### Web Layer
-- **Routes**: API endpoints for chat, history, health checks
-- **Templates**: HTML templates for the UI
-- **Static**: CSS, JavaScript, images
+### Flask Web Application (Single-File POC)
+- **Routes**: Simple Flask routes (`/`, `/chat`, `/clear`)
+- **Templates**: HTML template with chat interface
+- **Global State**: In-memory storage for single-user POC
+  - `app.config['AGENT']`: Single agent instance
+  - `app.config['THREAD']`: Single conversation thread
+  - `app.config['CHAT_HISTORY']`: UI display history
+  - `app.config['ERROR']`: Error display
 
-### Agent Layer
-- **Jaguar Agent**: Main AI agent for jaguar conservation queries
-- **Configuration**: Agent-specific settings from JSON
-- **Middleware**: Logging, telemetry, and other cross-cutting concerns
+### Microsoft Agent Framework
+- **Jaguar Conservation Agent**: Graph RAG specialist agent
+- **System Prompt**: Graph RAG instructions and SPARQL guidelines
+- **OpenAI Client**: GPT-4 integration with function calling
+- **Thread Management**: Conversation context preservation
 
-### Context & State Layer
-- **Thread Manager**: Manages conversation sessions with state
-- **Context Provider**: Provides agent memory and context
-- **Chat History**: Stores message history per session
-
-### Tools Layer
-- **GraphDB Tool**: Executes SPARQL queries against GraphDB
-- **Tool Registry**: Central registry for all agent tools
-
-### Services Layer
-- **LLM Client**: Azure OpenAI client wrapper
-- **GraphDB Service**: GraphDB connection and query service
+### Graph RAG Tools
+- **GraphDB Tool**: Core Graph RAG component
+  - Executes SPARQL queries against knowledge graph
+  - Validates query syntax and ontology compliance
+  - Processes and formats query results
 
 ### External Systems
-- **Azure OpenAI**: GPT model for natural language processing
-- **GraphDB**: RDF triple store with jaguar ontology
+- **OpenAI API**: GPT-4 model for natural language processing
+- **GraphDB**: RDF triple store with jaguar conservation ontology
 
-## Data Flow
+## Graph RAG Data Flow
 
 ### User Query Processing
 
 1. **User Request**: User sends message via web interface
-2. **Route Handler**: Flask route receives request
-3. **Session Management**: Get or create session ID
-4. **Agent Processing**:
-   - Retrieve conversation context
-   - Add user message to history
-   - Generate response using LLM
-   - Check for tool calls
-5. **Tool Execution** (if needed):
-   - Parse tool arguments
-   - Execute GraphDB query
-   - Return results to LLM
+2. **Flask Route**: `/chat` route receives POST request
+3. **Agent Retrieval**: Get singleton agent and thread instances
+4. **Graph RAG Processing**:
+   - **LLM Analysis**: OpenAI GPT analyzes natural language query
+   - **SPARQL Generation**: AI generates appropriate SPARQL query
+   - **Tool Call Detection**: Agent Framework detects need for GraphDB tool
+5. **Knowledge Graph Query**:
+   - **SPARQL Execution**: `query_jaguar_database` tool executes query
+   - **Result Processing**: Raw SPARQL results processed and formatted
 6. **Response Generation**:
-   - LLM interprets tool results
-   - Formats natural language response
-   - Applies middleware (logging, etc.)
-7. **Response Delivery**: Return formatted response to user
+   - **LLM Interpretation**: OpenAI GPT interprets GraphDB results
+   - **Natural Language Response**: Generates human-readable response
+   - **Markdown Formatting**: Applies formatting with code blocks
+7. **State Update**:
+   - **Thread Persistence**: Agent Framework maintains conversation context
+   - **UI History**: Flask app stores display history
+   - **Response Delivery**: Return formatted response to user
 
-## Key Design Patterns
+## Graph RAG Design Patterns
 
 ### 1. Singleton Pattern
-Services, tools, and agents use singleton pattern for global access:
+Single-user POC uses singleton pattern for global access:
 ```python
-def get_jaguar_agent() -> JaguarAgent:
-    global _jaguar_agent
-    if _jaguar_agent is None:
-        _jaguar_agent = JaguarAgent()
-    return _jaguar_agent
+def get_agent():
+    """Get or create the jaguar agent (singleton)"""
+    if app.config['AGENT'] is None:
+        app.config['AGENT'] = create_jaguar_agent()
+    return app.config['AGENT']
 ```
 
-### 2. Factory Pattern
-Flask application uses factory pattern:
+### 2. Agent Framework Pattern
+Microsoft Agent Framework handles conversation management:
 ```python
-def create_app():
-    app = Flask(__name__)
-    # ... configuration
-    return app
+# Agent Framework manages threads and context
+response = asyncio.run(agent.run(user_message, thread=thread, store=True))
 ```
 
-### 3. Middleware Pattern
-Agent uses middleware stack for cross-cutting concerns:
+### 3. Graph RAG Pattern
+Combines LLM with knowledge graph queries:
 ```python
-middleware.before_request(session_id, message)
-# ... process request
-middleware.after_response(session_id, response)
+# LLM generates SPARQL, tool executes against GraphDB
+tools=[query_jaguar_database]
+tool_choice="auto"
 ```
 
-### 4. Registry Pattern
-Tools are registered centrally for discovery:
+## Graph RAG State Management
+
+### Simplified POC State
 ```python
-registry.register_tool(name, definition, function)
-tool = registry.execute_tool(name, **kwargs)
+# Global Flask app configuration for single-user POC
+app.config['AGENT'] = None        # Single agent instance
+app.config['THREAD'] = None       # Single conversation thread  
+app.config['CHAT_HISTORY'] = []   # UI display history
+app.config['ERROR'] = None        # Error display
 ```
 
-## State Management
+### Thread Management
+- **Agent Framework**: Microsoft Agent Framework manages conversation context
+- **OpenAI Responses API**: Server-side thread persistence
+- **Flask App**: Simple UI state management
 
-### Thread-Based Sessions
-Each user session is managed as a thread:
-- Unique session ID
-- Persistent chat history
-- Metadata for context
-- Checkpoint capability (for future use)
+## Graph RAG Configuration
 
-### Context Providers
-Provide agent memory and state:
-- Session context
-- Conversation metadata
-- User information
-- Environment variables
+### Environment Variables
+```bash
+# OpenAI Configuration
+OPENAI_API_KEY=your_openai_api_key
+OPENAI_RESPONSES_MODEL_ID=gpt-4
 
-## Configuration Management
+# GraphDB Configuration
+GRAPHDB_URL=http://localhost:7200
+GRAPHDB_REPOSITORY=jaguar_conservation
+```
 
-### Environment Variables (.env)
-- API keys and secrets
-- External service URLs
-- Flask configuration
+### Agent Settings
+```python
+# Hardcoded in create_jaguar_agent() function
+settings = OpenAISettings(
+    api_key=os.getenv("OPENAI_API_KEY", ""),
+    model_id=os.getenv("OPENAI_RESPONSES_MODEL_ID", "gpt-4")
+)
+```
 
-### Agent Configuration (JSON)
-- Agent system prompts
-- Model parameters
-- Middleware settings
-- Tool configurations
+## Graph RAG Security
 
-## Security Considerations
+### API Security
+1. **API Keys**: Stored in `.env`, never committed to repository
+2. **Input Validation**: User inputs validated before processing
+3. **Error Handling**: Errors logged but sanitized for user display
+4. **SPARQL Injection Prevention**: Tool validates SPARQL syntax
 
-1. **API Keys**: Stored in `.env`, never committed
-2. **Session Management**: Flask sessions with secret key
-3. **Input Validation**: All user inputs validated
-4. **Error Handling**: Errors logged but sanitized for user display
-5. **SPARQL Injection**: Parameters properly escaped
+### Data Privacy
+- **Read-Only Access**: Agent only reads from GraphDB
+- **No Data Storage**: No user data persisted beyond conversation
+- **Secure APIs**: Use HTTPS for all external communications
 
-## Scalability Considerations
+## Graph RAG Scalability
 
-### Current State (Single Server)
-- In-memory session storage
-- Single Flask process
-- No load balancing
+### Current POC State
+- Single-file Flask application
+- In-memory state storage
+- Single-user design
+- OpenAI API rate limits
 
 ### Future Enhancements
-1. **Distributed Sessions**: Redis or database backend
-2. **Horizontal Scaling**: Multiple Flask instances
-3. **Async Processing**: Celery for long-running tasks
-4. **Caching**: Redis for frequently accessed data
-5. **Message Queue**: RabbitMQ for async tool execution
+1. **Multi-User Support**: Session-based user management
+2. **Distributed State**: Redis or database backend
+3. **Horizontal Scaling**: Multiple Flask instances
+4. **Query Caching**: Cache frequent SPARQL patterns
+5. **Async Processing**: Non-blocking GraphDB queries
 
-## Monitoring & Observability
+## Graph RAG Monitoring
 
 ### Logging
-- Structured logging with levels
-- File and console outputs
-- Per-module loggers
+- Flask request/response logging
+- Agent Framework conversation logging
+- GraphDB query execution logging
 
-### Telemetry (Planned)
-- Request/response metrics
-- Tool execution times
-- Error rates
-- Session analytics
+### Performance Metrics
+- **Response Times**: Graph RAG query processing time
+- **Query Success Rate**: SPARQL execution success rate
+- **Tool Usage**: GraphDB tool call frequency
 
-### Health Checks
-- `/health` endpoint
-- Agent status
-- Active session count
+## Graph RAG Testing
 
-## Testing Strategy
+### Manual Testing
+1. **Web Interface**: Test queries through Flask UI
+2. **SPARQL Validation**: Verify generated queries in GraphDB
+3. **Response Quality**: Check natural language response accuracy
 
-### Unit Tests
-- Individual components tested in isolation
-- Mock external dependencies
-- Test business logic
+### Example Test Queries
+```python
+# Test basic counting
+"How many jaguars are in the database?"
 
-### Integration Tests
-- Test component interactions
-- Use test GraphDB instance
-- Mock Azure OpenAI
+# Test filtering
+"Show me all male jaguars"
 
-### End-to-End Tests
-- Full user flow testing
-- Real external services (dev environment)
+# Test relationships
+"Which jaguars were rescued and by which organization?"
+```
 
-## Dependencies
+## Graph RAG Dependencies
 
-### Core
-- Flask 3.0.0
-- Pydantic 2.5.0
-- Azure OpenAI 1.51.0
-- Requests (for GraphDB)
+### Core Dependencies
+- **Flask 3.0.0**: Web framework
+- **OpenAI 1.51.0**: GPT API client
+- **Microsoft Agent Framework**: Agent management
+- **Requests**: GraphDB HTTP communication
 
-### Agent Framework (Future)
-- microsoft-agent-framework (when fully integrated)
+### Graph RAG Specific
+- **GraphDB**: RDF triple store
+- **SPARQL**: Query language for knowledge graphs
+- **RDF/Turtle**: Ontology format
 
-## Migration Notes
+## Graph RAG Project Structure
 
-This architecture represents the migration from a flat structure to a layered, modular architecture following Microsoft Agent Framework patterns. The current implementation is compatible with Agent Framework concepts while maintaining backward compatibility with the existing Flask application.
+```
+graph_RAG/
+├── app.py                    # Single-file Flask application
+├── templates/
+│   └── index.html           # Chat interface template
+├── src/
+│   ├── agents/
+│   │   └── jaguar_agent.py  # Agent creation (deprecated)
+│   └── tools/
+│       └── query_jaguar_database.py  # GraphDB tool
+├── docs/
+│   ├── agent_design.md      # Agent design documentation
+│   └── architecture.md      # Architecture documentation
+├── .env                     # Environment variables
+├── requirements.txt         # Python dependencies
+└── README.md               # Project documentation
+```
 
-Key improvements:
-- Better separation of concerns
-- Modular, testable components
-- Scalable architecture
-- Enterprise-ready patterns
+## Graph RAG Benefits
+
+### Technical Benefits
+- **Hybrid Intelligence**: Combines LLM reasoning with structured data
+- **Real-time Queries**: Live data from knowledge graphs
+- **Context Awareness**: Maintains conversation context
+- **Extensible**: Easy to add new tools and capabilities
+
+### Conservation Benefits
+- **Data-Driven Insights**: Access to structured conservation data
+- **Natural Language Interface**: Easy querying of complex data
+- **Educational Tool**: Demonstrates Graph RAG capabilities
+- **Research Support**: Facilitates conservation research queries
 

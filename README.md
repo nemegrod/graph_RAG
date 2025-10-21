@@ -1,25 +1,24 @@
 # 🐆 Graph RAG Chat Application
 
-A **Graph RAG (Retrieval-Augmented Generation)** chat application that combines the power of **Azure OpenAI GPT** with **knowledge graphs** stored in **Ontotext GraphDB**. This application demonstrates how to build an intelligent assistant using **Microsoft Agent Framework patterns** with structured data using SPARQL.
+A **Graph RAG (Retrieval-Augmented Generation)** chat application that combines **OpenAI GPT** with **knowledge graphs** stored in **GraphDB**. This application demonstrates how to build an intelligent assistant using **Microsoft Agent Framework** with structured data using SPARQL.
 
-**Version 2.0** - Refactored with Agent Framework architecture for scalability and enterprise readiness.
+**Version 2.0** - Single-file POC demonstrating Graph RAG capabilities with Agent Framework integration.
 
-## 🌟 Features
+## 🌟 Graph RAG Features
 
 ### 🤖 **Intelligent AI Agent**
-- **Agent Framework patterns** for modular, scalable architecture
-- **Azure OpenAI GPT** powered conversational interface
+- **Microsoft Agent Framework** for conversation management
+- **OpenAI GPT-4** powered conversational interface
 - **Function calling** for dynamic SPARQL query generation
 - **Context-aware** responses based on graph data
-- **Middleware support** for logging, telemetry, and filtering
-- **Thread-based state management** for robust conversation handling
+- **Thread-based state management** for conversation persistence
 
 ### 🔗 **Graph RAG Architecture**
-- **GraphDB integration** with Ontotext GraphDB
-- **LLM-driven SPARQL generation** based on ontology
+- **GraphDB integration** with RDF triple store
+- **LLM-driven SPARQL generation** based on jaguar ontology
 - **Hybrid intelligence** combining structured knowledge graphs with LLM reasoning
-- **Real-time data retrieval** from triple store
-- **Tool registry** for extensible functionality
+- **Real-time data retrieval** from knowledge graph
+- **Natural language to SPARQL** query translation
 
 ### 📊 **Jaguar Conservation Database**
 - **Jaguar ontology** with classes and properties
@@ -28,28 +27,19 @@ A **Graph RAG (Retrieval-Augmented Generation)** chat application that combines 
 - Threats, habitats, and locations
 - Rescue, rehabilitation, and release data
 
-### 🎨 **Modern UI/UX**
-- **Bootstrap 5** responsive design
-- **Full-height chat interface** that adapts to browser window
-- **Real-time markdown formatting** with Marked.js
-- **Code syntax highlighting** with Prism.js
-- **Typing indicators** and smooth animations
-
-### 🏗️ **Enterprise Architecture**
-- **Layered architecture** with clear separation of concerns
-- **Modular components** (agents, tools, services, models)
-- **Configuration management** with JSON and environment variables
-- **Comprehensive logging** with file and console outputs
-- **Testing structure** with unit and integration tests
-- **Documentation** for architecture and design decisions
+### 🎨 **Simple Web Interface**
+- **Flask-based** web application
+- **Clean chat interface** with message history
+- **Error handling** and user feedback
+- **Form-based** interaction (no JavaScript complexity)
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- **Python 3.10+** ⚠️ **REQUIRED** for Microsoft Agent Framework
-- **Docker** (for GraphDB)
-- **Azure OpenAI API** access
+- **Python 3.8+** (Python 3.10+ recommended)
+- **GraphDB** running on localhost:7200
+- **OpenAI API** access
 - **Git**
 
 ### 1. Clone the Repository
@@ -77,66 +67,41 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-For development:
-```bash
-pip install -r requirements-dev.txt
-```
-
 ### 4. Configure Environment Variables
 
-Run the setup script:
-```bash
-python scripts/setup_environment.py
-```
-
-Or manually create a `.env` file:
+Create a `.env` file:
 
 ```env
-# Azure OpenAI Configuration
-AZURE_OPENAI_API_KEY=your_api_key_here
-AZURE_OPENAI_ENDPOINT=https://your-endpoint.openai.azure.com/
-AZURE_OPENAI_API_VERSION=2024-12-01-preview
-AZURE_OPENAI_MODEL_DEPLOYMENT=your_model_deployment_name
+# OpenAI Configuration
+OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_RESPONSES_MODEL_ID=gpt-4
 
 # GraphDB Configuration
 GRAPHDB_URL=http://localhost:7200
-GRAPHDB_REPOSITORY=Jaguars
-
-# Flask Configuration (optional)
-FLASK_SECRET_KEY=your-secret-key-change-this-in-production
-FLASK_DEBUG=True
-FLASK_HOST=0.0.0.0
-FLASK_PORT=5000
+GRAPHDB_REPOSITORY=jaguar_conservation
 ```
 
 ### 5. Start GraphDB
 
 ```bash
-# Pull GraphDB image
-docker pull ontotext/graphdb:10.7.3
-
-# Run GraphDB
+# Using Docker
 docker run --name graphdb-local -p 7200:7200 -d ontotext/graphdb:10.7.3
 
-# Start existing container
-docker start graphdb-local
+# Or download and run GraphDB directly
+./graphdb-10.x.x/bin/graphdb
 ```
 
 ### 6. Load Jaguar Ontology
 
 1. Access GraphDB Workbench at `http://localhost:7200`
-2. Create a new repository named `Jaguars`
-3. Import the ontology file: `data/ontologies/jaguar_ontology_rich.ttl`
-4. Import the data file: `data/ontologies/jaguars.ttl`
+2. Create a new repository named `jaguar_conservation`
+3. Import the ontology file: `data/ontologies/jaguar_ontology.ttl`
 
 ### 7. Run the Application
 
 ```bash
-# Using the helper script
-python scripts/start_app.py
-
-# Or directly
-python src/web/app.py
+# Start the single-file Flask application
+python3 app.py
 ```
 
 Open your browser and navigate to `http://localhost:5000`
@@ -145,38 +110,20 @@ Open your browser and navigate to `http://localhost:5000`
 
 ```
 graph_RAG/
+├── app.py                    # Single-file Flask application
+├── templates/
+│   └── index.html           # Chat interface template
 ├── src/
-│   ├── agents/              # AI agents
-│   │   └── jaguar_agent/    # Jaguar conservation agent
-│   ├── tools/               # Agent tools (GraphDB, etc.)
-│   ├── services/            # External services (LLM, GraphDB)
-│   ├── models/              # Data models
-│   ├── context/             # State and context management
-│   ├── web/                 # Flask application
-│   │   ├── app.py          # Application factory
-│   │   ├── routes.py       # API routes
-│   │   └── templates/      # HTML templates
-│   ├── workflows/           # Future: Multi-agent workflows
-│   └── utils/               # Utilities and configuration
-├── data/
-│   ├── ontologies/          # RDF/Turtle ontology files
-│   └── corpus/              # Text corpus files
-├── config/
-│   └── agent_config.json    # Agent configuration
-├── tests/
-│   ├── unit/                # Unit tests
-│   └── integration/         # Integration tests
-├── docs/                    # Documentation
-│   ├── architecture.md
-│   ├── agent_design.md
-│   └── migration_notes.md
-├── scripts/                 # Helper scripts
-├── logs/                    # Log files
-├── .env                     # Environment variables (not in repo)
-├── requirements.txt         # Production dependencies
-├── requirements-dev.txt     # Development dependencies
-├── pyproject.toml           # Modern Python packaging
-└── README.md               # This file
+│   ├── agents/
+│   │   └── jaguar_agent.py  # Agent creation (deprecated)
+│   └── tools/
+│       └── query_jaguar_database.py  # GraphDB tool
+├── docs/
+│   ├── agent_design.md      # Agent design documentation
+│   └── architecture.md      # Architecture documentation
+├── .env                     # Environment variables
+├── requirements.txt         # Python dependencies
+└── README.md               # Project documentation
 ```
 
 ## 🛠️ Technology Stack
