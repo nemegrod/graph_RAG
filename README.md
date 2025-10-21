@@ -117,7 +117,7 @@ graph_RAG/
 │   ├── agents/
 │   │   └── jaguar_agent.py  # Agent creation (deprecated)
 │   └── tools/
-│       └── query_jaguar_database.py  # GraphDB tool
+│       └── query_jaguar_database.py  # GraphDB tool with inline logic
 ├── docs/
 │   ├── agent_design.md      # Agent design documentation
 │   └── architecture.md      # Architecture documentation

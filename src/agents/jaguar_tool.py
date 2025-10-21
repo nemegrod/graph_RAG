@@ -1,5 +1,11 @@
-from src.services.graphdb_service import get_graphdb_service
+import os
 import json
+import requests
+from urllib.parse import urlencode
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 
 def query_jaguar_database(sparql_query: str) -> str:
@@ -310,8 +316,30 @@ def query_jaguar_database(sparql_query: str) -> str:
         JSON string containing query results from GraphDB
     """
     try:
-        graphdb = get_graphdb_service()
-        result = graphdb.execute_sparql_query(sparql_query)
+        # GraphDB configuration
+        url = os.getenv("GRAPHDB_URL", "http://localhost:7200")
+        repository = os.getenv("GRAPHDB_REPOSITORY", "jaguar_conservation")
+        sparql_endpoint = f"{url}/repositories/{repository}/statements"
+        
+        # Execute SPARQL query
+        params = {'query': sparql_query.strip()}
+        headers = {
+            'Accept': 'application/sparql-results+json',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+        
+        response = requests.post(
+            sparql_endpoint,
+            data=urlencode(params),
+            headers=headers,
+            timeout=30
+        )
+        
+        response.raise_for_status()
+        result = response.json()
         return json.dumps(result, indent=2)
+        
+    except requests.exceptions.ConnectionError as e:
+        return json.dumps({"error": f"Could not connect to GraphDB at {url}", "query": sparql_query})
     except Exception as e:
         return json.dumps({"error": str(e), "query": sparql_query})
