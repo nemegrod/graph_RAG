@@ -1,111 +1,102 @@
-from flask import Flask, render_template, request, jsonify, session, g
-import uuid
+from flask import Flask, render_template, request, redirect, url_for
 import asyncio
+import logging
 from src.agents.jaguar_agent.jaguar_agent_af import get_jaguar_agent
 
-app = Flask(__name__)
-app.secret_key = 'your-secret-key-change-this-in-production'  # Change this in production
+# Suppress Werkzeug request logs
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
 
-# Store thread IDs per session (Agent Framework manages conversation history internally)
-app.config['SESSION_THREADS'] = {}
+app = Flask(__name__)
+
+# Single-user POC: Global storage for one conversation thread and history
+app.config['AGENT'] = None
+app.config['THREAD'] = None
+app.config['CHAT_HISTORY'] = []
+app.config['ERROR'] = None
 
 
 def get_agent():
-    """Get or create the jaguar agent (singleton pattern using Flask app context)"""
-    if 'agent' not in app.config:
-        app.config['agent'] = get_jaguar_agent()
-    return app.config['agent']
+    """Get or create the jaguar agent (singleton)"""
+    if app.config['AGENT'] is None:
+        app.config['AGENT'] = get_jaguar_agent()
+    return app.config['AGENT']
+
+
+def get_thread():
+    """Get or create the conversation thread (singleton)"""
+    if app.config['THREAD'] is None:
+        agent = get_agent()
+        app.config['THREAD'] = agent.get_new_thread()
+    return app.config['THREAD']
+
 
 @app.route('/')
 def index():
     """Render the main chat interface"""
-    return render_template('index.html')
+    error = app.config.get('ERROR')
+    app.config['ERROR'] = None  # Clear error after displaying
+    return render_template(
+        'index.html', 
+        chat_history=app.config['CHAT_HISTORY'],
+        error=error
+    )
 
 @app.route('/chat', methods=['POST'])
 def chat():
     """Handle chat messages"""
     try:
-        # Get the agent instance
-        agent = get_agent()
-        
-        data = request.get_json()
-        user_message = data.get('message', '').strip()
+        # Get user message from form
+        user_message = request.form.get('message', '').strip()
         
         if not user_message:
-            return jsonify({'error': 'Empty message'}), 400
+            return redirect(url_for('index'))
         
-        # Get or create session ID and thread ID
-        session_id = session.get('session_id')
-        if not session_id:
-            session_id = str(uuid.uuid4())
-            session['session_id'] = session_id
-            # Each session gets a unique thread ID for Agent Framework
-            app.config['SESSION_THREADS'][session_id] = f"thread_{session_id}"
+        # Get agent and thread (created on first use)
+        agent = get_agent()
+        thread = get_thread()
         
-        thread_id = app.config['SESSION_THREADS'].get(session_id, f"thread_{session_id}")
+        # Run agent with the conversation thread
+        response = asyncio.run(agent.run(user_message, thread=thread, store=True))
         
-        # Run agent asynchronously - Agent Framework manages history per thread
-        response = asyncio.run(agent.run(user_message, thread_id=thread_id))
+        # Extract assistant response
+        assistant_response = response.text
         
-        # Extract the text content from the AgentRunResponse object
-        last_message = response.messages[-1] if response.messages else None
-        if last_message:
-            # Try different possible attributes
-            assistant_response = (
-                getattr(last_message, 'text', None) or
-                getattr(last_message, 'content', None) or
-                str(last_message)
-            )
-        else:
-            assistant_response = ""
-        
-        return jsonify({
-            'user_message': user_message,
-            'assistant_response': assistant_response,
-            'success': True
+        # Store messages in global chat history for UI display
+        app.config['CHAT_HISTORY'].append({
+            'role': 'user',
+            'content': user_message
+        })
+        app.config['CHAT_HISTORY'].append({
+            'role': 'assistant',
+            'content': assistant_response
         })
         
+        return redirect(url_for('index'))
+        
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        app.config['ERROR'] = str(e)
+        return redirect(url_for('index'))
 
 @app.route('/clear', methods=['POST'])
 def clear_chat():
-    """Clear the chat history by creating a new thread"""
+    """Clear the chat history and start a new conversation"""
     try:
-        session_id = session.get('session_id')
-        if session_id:
-            # Create a new thread ID to start fresh conversation
-            # Agent Framework maintains history per thread, so new thread = fresh start
-            new_thread_id = f"thread_{uuid.uuid4()}"
-            app.config['SESSION_THREADS'][session_id] = new_thread_id
-            return jsonify({'success': True, 'message': 'Chat history cleared'})
+        # Get agent
+        agent = get_agent()
         
-        return jsonify({'success': True, 'message': 'No active session'})
-    
+        # Create new thread (replaces existing one)
+        app.config['THREAD'] = agent.get_new_thread()
+        
+        # Clear chat history
+        app.config['CHAT_HISTORY'] = []
+        
+        return redirect(url_for('index'))
+        
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        app.config['ERROR'] = str(e)
+        return redirect(url_for('index'))
 
-@app.route('/history', methods=['GET'])
-def get_history():
-    """Get chat history for current session"""
-    try:
-        session_id = session.get('session_id')
-        thread_id = app.config['SESSION_THREADS'].get(session_id) if session_id else None
-        
-        if thread_id:
-            # Agent Framework manages history internally per thread
-            # For now, return thread info - history is maintained by the agent
-            return jsonify({
-                'messages': [],
-                'success': True,
-                'note': 'History is managed by Agent Framework per thread',
-                'thread_id': thread_id
-            })
-        else:
-            return jsonify({'messages': [], 'success': True})
-    
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=False, host='0.0.0.0', port=5000)
