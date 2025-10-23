@@ -311,6 +311,7 @@ def query_jaguar_database(sparql_query: str) -> str:
         SELECT (COUNT(?jaguar) as ?count) WHERE { ?jaguar a :Jaguar . }
         
         - Always try to make a simple query first and only add complexity if needed.
+        - Always include relevant prefixes in the query.
     
     Returns:
         JSON string containing query results from GraphDB

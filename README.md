@@ -78,17 +78,21 @@ OPENAI_RESPONSES_MODEL_ID=gpt-4
 
 # GraphDB Configuration
 GRAPHDB_URL=http://localhost:7200
-GRAPHDB_REPOSITORY=jaguar_conservation
+GRAPHDB_REPOSITORY=your_repo_name_here
 ```
 
 ### 5. Start GraphDB
 
 ```bash
-# Using Docker
-docker run --name graphdb-local -p 7200:7200 -d ontotext/graphdb:10.7.3
+# Using Docker (first time)
+docker run -d --name graphdb-instance -p 7200:7200 local-graphdb:latest
 
-# Or download and run GraphDB directly
-./graphdb-10.x.x/bin/graphdb
+# Stop container
+docker stop graphdb-instance
+
+# Start existing container
+docker start graphdb-instance
+
 ```
 
 ### 6. Load Jaguar Ontology
