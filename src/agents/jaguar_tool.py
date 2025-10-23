@@ -319,7 +319,7 @@ def query_jaguar_database(sparql_query: str) -> str:
         # GraphDB configuration
         url = os.getenv("GRAPHDB_URL", "http://localhost:7200")
         repository = os.getenv("GRAPHDB_REPOSITORY", "")
-        sparql_endpoint = f"{url}/repositories/{repository}/statements"
+        sparql_endpoint = f"{url}/repositories/{repository}"
         
         # Execute SPARQL query
         params = {'query': sparql_query.strip()}

@@ -16,7 +16,7 @@ from src.agents.jaguar_tool import query_jaguar_database
 load_dotenv()
 
 
-def create_jaguar_agent():
+def create_jaguar_query_agent():
     """
     Create and return a native Agent Framework agent for jaguar conservation.
     
@@ -55,7 +55,7 @@ When responding:
     # Create and return native Agent Framework agent
     agent = ChatAgent(
         client,
-        name="JaguarConservationAgent",
+        name="JaguarQueryAgent",
         instructions=system_prompt,
         tools=[query_jaguar_database],
         tool_choice="auto"
