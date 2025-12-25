@@ -305,33 +305,40 @@ print(response.text)
 
 ## Ontology-Aware Knowledge Extraction
 
-### The "Jaguar Problem"
+### The "Jaguar Problem" - Extreme Edition
 
-The system includes a Jupyter notebook (`text2knowledge.ipynb`) that demonstrates **ontology-driven extraction**:
+The system includes a Jupyter notebook (`text2knowledge.ipynb`) that demonstrates **ontology-driven extraction** against an extreme challenge:
 
-**Challenge**: Extract jaguar conservation data from a corpus containing:
-- 🐆 Wildlife jaguars (Panthera onca)
-- 🚗 Jaguar cars (E-Type, XK-E)
-- 🎸 Fender Jaguar guitars
+**Corpus**: The complete "Oliver Twist" novel (~956,000 characters) containing:
+- 📚 Victorian fiction as massive noise (200,000+ tokens)
+- 🐆 Wildlife jaguar conservation data scattered throughout
+- 🚗 Jaguar car mentions as deliberate distractors
+- 🎸 Fender Jaguar guitar references to test disambiguation
 
-**Solution**: By providing GPT-5 with the **jaguar conservation ontology**, the LLM:
-1. Understands the **domain context** from formal class definitions
-2. **Disambiguates entities** based on semantic structure
-3. **Extracts only wildlife-related information**
-4. **Generates RDF Turtle** aligned with the ontology
-5. **Infers relationships** between entities from context
+**Solution**: By providing **GPT-5.2** with the **RDF ontology directly** (not a text description), the LLM:
+1. **Maintains attention** across the entire extended context window
+2. **Understands the domain** from formal RDF class definitions
+3. **Disambiguates entities** based on ontology structure
+4. **Extracts only wildlife-related information** from scattered locations
+5. **Generates RDF Turtle** perfectly aligned with the ontology
+6. **Infers relationships** between entities from contextual clues
 
 ### Knowledge Extraction Process
 
 ```
-1. Load Ontology (jaguar_ontology.ttl)
+1. Load RDF Ontology (jaguar_ontology.ttl)
+   - Fed directly to GPT-5.2, no text conversion
+   - LLMs understand RDF natively from training
    ↓
-2. Load Mixed-Content Corpus (jaguar_corpus.txt)
+2. Load Extreme Corpus (oliver_twist_corpus.txt)
+   - 956K characters of novel + scattered jaguar data
+   - Includes car and guitar distractors
    ↓
-3. GPT-5 Semantic Analysis
-   - Understands domain from ontology classes/properties
-   - Identifies relevant entities (wildlife jaguars only)
-   - Maps relationships to ontology structure
+3. GPT-5.2 Semantic Analysis
+   - Maintains attention across 200K+ tokens
+   - Understands domain from RDF classes/properties
+   - Disambiguates wildlife from cars/guitars
+   - Identifies scattered relevant entities
    ↓
 4. Generate RDF Turtle
    - Valid syntax
@@ -343,42 +350,56 @@ The system includes a Jupyter notebook (`text2knowledge.ipynb`) that demonstrate
    - Data integrates seamlessly with existing graph
 ```
 
-### Why Ontologies Are Essential
+### Why RDF Ontologies (Not Text Descriptions)
+
+**This requires RDF ontologies fed directly to the LLM**—not natural language descriptions:
+
+✅ **Direct RDF Comprehension**
+- LLMs are trained on vast RDF/OWL corpora
+- They parse Turtle syntax like programming code
+- No lossy translation from ontology → text → LLM
+
+✅ **No Error Multiplication**
+- Converting RDF to text introduces ambiguity
+- Each translation step is a potential error source
+- Direct RDF eliminates the "telephone game"
+
+✅ **Machine-Readable Storage**
+- RDF ontologies live in triple stores
+- SPARQL queries work against the same structure
+- One source of truth for humans, LLMs, and machines
+
+✅ **LLMs "Simulate" OWL Reasoning**
+- Whether LLMs truly reason is debatable
+- But trained on so much RDF, they predict OWL-like outcomes
+- Results demonstrate effective semantic understanding
 
 **This CANNOT be done with LPG databases** because:
-
-❌ **No Formal Semantics**
-- LPG labels are just strings (`"Jaguar"`, `"OCCURS_IN"`)
-- No machine-readable domain definitions
-- LLM has no semantic guidance
-
-❌ **No Class Hierarchies**
-- No RDFS/OWL inheritance
-- No taxonomic structure
-- No reasoning capabilities
-
-❌ **No Property Constraints**
-- No domain/range definitions
-- No cardinality rules
-- No validation mechanisms
-
-✅ **RDF/Ontologies Provide**
-- Formal class definitions (`ont:Jaguar rdfs:subClassOf ont:Animal`)
-- Property semantics (`ont:hasGender rdfs:domain ont:Jaguar`)
-- Hierarchical structure for LLM understanding
-- Validation and reasoning capabilities
-- W3C standards for interoperability
+- LPG labels are just strings—no formal semantics
+- No class hierarchies (RDFS/OWL inheritance)
+- No property constraints (domain/range)
+- LLMs have no semantic structure to reason over
 
 ### Extraction Example
 
-**Input Corpus** (mixed content):
+**Input**: 956,000 characters including:
 ```
-El Jefe is an adult, male jaguar that was seen in Arizona...
-The Jaguar E-Type is a British sports car manufactured by Jaguar Cars...
-The Fender Jaguar is an electric guitar characterized by...
+[200,000+ tokens of Oliver Twist novel...]
+
+...El Jefe is an adult, male jaguar that was seen in Arizona...
+
+[More novel chapters...]
+
+...The Jaguar E-Type is a British sports car manufactured by Jaguar Cars...
+
+[More novel chapters...]
+
+...Conservation efforts in Sonora have tracked several wild jaguars...
+
+[More novel chapters with Fender Jaguar guitar mentions...]
 ```
 
-**Output RDF** (wildlife only):
+**Output RDF** (wildlife only, cars and guitars ignored):
 ```turtle
 :ElJefe a ont:Jaguar ;
   rdfs:label "El Jefe" ;
@@ -387,7 +408,7 @@ The Fender Jaguar is an electric guitar characterized by...
   ont:monitoredByOrg :AZGFD .
 ```
 
-No cars. No guitars. Just semantically relevant conservation data.
+No cars. No guitars. No Victorian fiction. Just semantically relevant conservation data extracted from scattered locations across a massive corpus.
 
 ## Graph RAG Future Enhancements
 

@@ -83,9 +83,9 @@ In addition to querying existing knowledge graphs, this system provides **ontolo
 │         └──────────┬──────────┘                            │
 │                    │                                        │
 │         ┌──────────▼──────────┐                            │
-│         │      GPT-5          │                            │
+│         │      GPT-5.2        │                            │
 │         │  Semantic Analysis  │                            │
-│         │  - Domain Context   │                            │
+│         │  - Extended Context │                            │
 │         │  - Disambiguation   │                            │
 │         │  - Relationship     │                            │
 │         │    Inference        │                            │
@@ -137,11 +137,11 @@ In addition to querying existing knowledge graphs, this system provides **ontolo
 
 ### Knowledge Extraction Tools
 - **text2knowledge.ipynb**: Jupyter notebook for ontology-aware extraction
-  - Loads formal ontology (jaguar_ontology.ttl)
-  - Processes unstructured text corpus
-  - Uses GPT-5 for semantic entity extraction
+  - Loads formal RDF ontology (jaguar_ontology.ttl) directly—no text conversion
+  - Processes the extreme Oliver Twist corpus (956K chars with scattered jaguar data)
+  - Uses **GPT-5.2** for semantic entity extraction across extended context
   - Generates RDF Turtle aligned with ontology
-  - Demonstrates concept understanding vs. pattern matching
+  - Demonstrates why RDF ontologies outperform natural language descriptions
 
 ### Graph RAG Tools
 - **GraphDB Tool**: Core Graph RAG component
@@ -150,7 +150,7 @@ In addition to querying existing knowledge graphs, this system provides **ontolo
   - Processes and formats query results
 
 ### External Systems
-- **OpenAI API**: GPT-4/GPT-5 for natural language processing and semantic extraction
+- **OpenAI API**: GPT-4 for chat queries, GPT-5.2 for ontology-aware knowledge extraction
 - **GraphDB**: RDF triple store with jaguar conservation ontology
 
 ## Graph RAG Data Flow
@@ -308,7 +308,8 @@ graph_RAG/
 ├── data/
 │   ├── jaguar_ontology.ttl       # Jaguar conservation ontology (RDFS/OWL)
 │   ├── jaguars.ttl               # Jaguar instance data (RDF)
-│   └── jaguar_corpus.txt         # Mixed-content text corpus for extraction
+│   ├── jaguar_corpus.txt         # Simple mixed-content corpus
+│   └── oliver_twist_corpus.txt   # Extreme challenge: full novel + scattered jaguar data
 ├── docs/
 │   ├── agent_design.md      # Agent design documentation
 │   └── architecture.md      # Architecture documentation
