@@ -2,6 +2,11 @@
 
 A **Graph RAG (Retrieval-Augmented Generation)** chat application that combines **OpenAI GPT** with **knowledge graphs** stored in **GraphDB**. This application demonstrates how to build an intelligent assistant using **Microsoft Agent Framework** with structured data using SPARQL.
 
+**If you find it useful, please Star ⭐ the repo so it becomes easier for others to find!**
+
+If your data is structured and you are looking for a DataFrame graphrag, check out my other repo: (https://github.com/nemegrod/graph_RAG_structured)
+
+
 **Version 2.0** - Simplified PoC using Microsoft Agent Framework DevUI for rapid development and testing. Added intelligent knowledge extraction from text corpus using knowledge representation in ontology. 
 
 ## 🌟 Graph RAG Features
