@@ -128,14 +128,16 @@ Use the included Jupyter notebook to extract structured data from unstructured t
 
 2. Run the cells to:
    - Load the jaguar ontology (`data/jaguar_ontology.ttl`)
-   - Load the text corpus (`data/jaguar_corpus.txt`)
-   - Use **GPT-5** to intelligently extract entities and relationships
+   - Load the extreme challenge corpus (`data/oliver_twist_corpus.txt`)
+   - Use **GPT-5.2** to intelligently extract entities and relationships
 
-**What makes this special:**
-- The corpus contains mixed content about different "Jaguar" entities (cars, guitars, wildlife)
-- The AI uses the **ontology structure** to understand the concept and **only extracts wildlife-related jaguars**
-- This demonstrates ontology-driven entity extraction, filtering out irrelevant information automatically
-- Processing takes approximately 2-4 minutes
+**What makes this remarkable:**
+- The corpus is the **complete Oliver Twist novel** (~956,000 characters) with **jaguar conservation data scattered throughout**
+- Mixed in are deliberately placed **Jaguar car** and **Fender guitar** mentions as distractors
+- GPT-5.2 uses the **RDF ontology directly** (not a text description) to understand the domain
+- The AI **filters out irrelevant content** and extracts ONLY wildlife-related data aligned to the ontology
+- Demonstrates GPT-5.2's extended context window and semantic reasoning capabilities
+- Processing takes approximately 1-3 minutes
 
 3. The notebook generates RDF Turtle code that aligns with your ontology
 
@@ -144,10 +146,10 @@ Use the included Jupyter notebook to extract structured data from unstructured t
    - Paste the generated RDF Turtle code
    - Import into your repository
 
-This approach is ideal for:
-- Mining your own jaguar-related documents
-- Understanding how LLMs can use ontologies for intelligent extraction
-- Customizing the knowledge graph with new data sources
+This approach demonstrates:
+- Mining domain-specific data from massive, noisy corpora
+- Why RDF ontologies are superior to natural language descriptions for LLM guidance
+- How formal semantics enable intelligent entity disambiguation
 
 ### 7. Run the Application
 
@@ -169,9 +171,10 @@ graph_RAG/
 │       ├── jaguar_query_agent.py  # Agent creation with DevUI integration
 │       └── jaguar_tool.py         # GraphDB tool implementation
 ├── data/
-│   ├── jaguar_ontology.ttl       # Basic jaguar ontology
+│   ├── jaguar_ontology.ttl       # Jaguar conservation ontology (RDF/RDFS)
 │   ├── jaguars.ttl               # Jaguar instance data
-│   └── jaguar_corpus.txt         # Text corpus for mining (cars, guitars, wildlife)
+│   ├── jaguar_corpus.txt         # Simple mixed-content corpus
+│   └── oliver_twist_corpus.txt   # Extreme challenge: full novel + scattered jaguar data
 ├── docs/
 │   ├── agent_design.md      # Agent design documentation
 │   └── architecture.md      # Architecture documentation
